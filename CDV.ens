@@ -1,0 +1,740 @@
+;AUTORES:
+;	NIHEL KELLA BOUZIANE
+;	JULIO MANSO SANCHEZ-TORNERO
+
+;--------------------------------------MACROS--------------------------------------
+
+;Carga el registro reg con la direccion efectiva definida por la etiqueta ETIQ
+LEA:    MACRO  (reg, ETIQ)
+        or     reg, r0,  low(ETIQ)
+        or.u   reg, reg, high(ETIQ)
+        ENDMACRO
+	
+;Decrementa el registro reg y salta a la etiqueta ETIQ si el resultado no es 0	
+DBNZ:	MACRO (reg, ETIQ)
+		sub reg, reg, 1
+		cmp r5, reg, 0
+		bb0 eq, r5, ETIQ
+		ENDMACRO  
+
+;AÃƒÂ±ade un elemento a la cima de la pila
+PUSH:   MACRO  (reg)
+        subu   r30, r30, 4
+        st     reg, r30, r0
+        ENDMACRO
+
+;Quita el elemento en la cima de la pila
+POP:    MACRO  (reg)
+        ld     reg, r30, r0
+        addu   r30, r30, 4
+        ENDMACRO
+
+;-------------------------------DATOS-------------------------------------
+
+;--------------------------PRUEBAS LongCad--------------------------------
+
+org 18000
+DATO1:	data	"Pienso, luego existo\0AA"
+;org 19000
+;DATO2:  data	"Pablito clavo un clavito &&&&\0"
+
+; Pasa pruebas
+
+;-------------------------PRUEBAS BuscarCar-------------------------------
+
+org 20000
+DATO3:  data	"Pienso, luego existo\0AA"
+;org 21000
+;DATO4:	data	"Pienso, luego existo\0AA"
+
+; Pasa pruebas
+
+;-----------------------PRUEBAS CoincidenCad------------------------------
+
+org 22000
+DATO5:  data	"Pienso, luego existo\0AA"
+org 23000
+DATO6:  data	"Pienso, luego no existo\0AA"
+
+; Pasa pruebas
+
+;-----------------------PRUEBAS BuscaMax------------------------------
+org 26000
+DATO9:  data    "Nuestra envidia siempre dura más que la felicidad de quien envidiamos\0"
+;org 26600
+;DATO11: data     "hola\0"
+org 27000 
+DATO12:  data    0
+
+; Pasa pruebas
+
+;-----------------------PRUEBAS CheckSum------------------------------
+
+org 28000
+DATO13:	data	"SOLO SE QUE NO SE NADA\0AA"
+;org 29000
+;DATO14: data    "SOL\0" 
+
+; Pasa pruebas
+
+;-----------------------PRUEBAS Comprime------------------------------
+org 30000
+DATO16: data       0
+org 31000
+DATA17: data      "Supercalifragilisticoespialidoso\0"
+;org 32000
+;DATA18: data	"cuando yo digo Diego, digo digo, y cuando yo digo digo, digo Diego\0"
+
+; Pasa pruebas
+
+;-----------------------PRUEBAS Descomprime------------------------------
+org 12000
+CMPR: data 0x07010016, 0x45000000, 0x72657473, 0x6C636F6E
+	        data 0x6F646965, 0x7473616D, 0x6564696F, 0x0000006F
+;CMPR: data 0x08010042, 0x1C060000, 0x6E617563, 0x79206F64
+;	        data 0x6964206F, 0x44206F67, 0x6F676569, 0x0600092C
+;	        data 0x2C04000A, 0x00207920, 0x001B0F00, 0x0A000A06
+
+org 10000
+DATO18: data    0
+
+; Pasa pruebas
+
+;-----------------------PRUEBAS Verifica------------------------------
+org 9000
+;TEXT:  data   "tres tristes tigres comen trigo en un trigal, el primer tigre que...\0"
+DATO19:	data "Esternocleidomastoideo\0"
+;DATO22: data "cuando yo digo Diego, digo digo, y cuando yo digo digo, digo Diego\0"
+org 8000
+DATO20: data    0
+
+org 7000
+DATO21: data    0
+
+; Pasa pruebas
+
+;---------------------------PROGRAMA PRINCIPAL-----------------------------------
+
+org 3500
+PPAL1:	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 18000 	; Guarda en r2 la direccion de memoria 18000 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr LongCad 		; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop
+		
+org 3600
+PPAL2:	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 10 		; Guarda TO 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 4 		; Guarda FROM 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 20000 	; Guarda REF la direccion de memoria 20000 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 42 		; Guarda CHAR 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr BuscaCar 		; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop
+
+org 3700
+PPAL3: 	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 24000 	; Guarda Cadena2 la direccion de memoria 24000
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 25000 	; Guarda Cadena1 la direccion de memoria 25000 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr CoincidenCad 	; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop
+		
+org 3800
+PPAL4:	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 27000 	; Guarda JJ la direccion de memoria 27000
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 10		; Guarda MAX 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 26000 	; Guarda REF la direccion de memoria 26000 
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr BuscaMax 		; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop
+		
+org 3900
+PPAL5:	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 28000 	; Guarda Cadena la direccion de memoria 28000
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr Checksum	 	; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop
+		
+org 4000
+PPAL6:	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 30000 	; Texto comprimido
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 31000	; Texto a comprimir
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr Comprime 		; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop
+org 4100
+PPAL7:	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 10000 	; Zona de memoria donde introducimos el texto descomprimido
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 12000	; Texto a descomprimir
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr Descomprime 	; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop		
+		
+org 4200 
+PPAL8:	LEA(r30, 60000) 	; Asigna el marco de pila en la direccion 60000
+		add r2, r0, 7000 	; Checksum2
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 8000	; Checksum1
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		add r2, r0, 9000	; Texto original
+		PUSH (r2) 			; Apila r2 en el marco de pila
+		bsr Verifica 		; r1 se activa guardando la direccion de memoria de esta instruccion
+		stop
+;---------------------------SUBRUTINAS-----------------------------------
+
+;---------LONGCAD----------
+
+LongCad: 	PUSH (r1)
+			PUSH (r31)
+			or r31, r30, r0 
+			ld  r10, r31, 8			; Cargo la palabra
+			or  r4,r0, r0  			; Valor del desplazamiento
+			or  r29, r0, 0 			; Valor de retorno inicializado a 0 
+			
+BucleLong:	ld.bu r11, r10, r4		; Cargo en r11 el primer char de la cadena
+			cmp r8, r11, 0 			; Compara el char con el char nulo.
+			bb1 eq, r8, CharNulo	; Si son iguales, se hace un salto a CharNulo
+			addu r4, r4, 1			; Si no, se incrementa el desplazamiento
+			br BucleLong
+			
+CharNulo: 	or	r29, r4, r0			; Cargo en r29 el valor de desplazamiento
+			POP (r31)
+			POP (r1) 			
+			jmp (r1)	
+			
+;---------BUSCACAR----------
+
+BuscaCar: 	PUSH (r1)
+			PUSH (r31)
+			or r31, r30, r0 
+			ld  r2, r31, 20		; Cargo el valor TO
+			ld  r3, r31, 16	 	; Cargo el valor FROM
+			ld  r10, r31, 12 	; Cargo el valor REF
+			ld  r4, r31, 8	 	; Cargo el valor CHAR
+			or  r5, r3, r0 	 	; Iniciliazo el valor del desplazamiento a from
+			or  r29, r0, 0 	 	; Valor de retorno inicializado a 0 (posicion)
+			
+BucleBusc:	ld.bu r11, r10, r5	; Cargo en r11 el primer char del intervalo de ref
+			cmp r8, r11, r4 	; Compara si es igual al char que buscamos
+			bb1 eq, r8, CharEnc	; Si se cumple, salta a CharEnc
+			addu r5, r5, 1 		; Si no, se incrementa el desplazamiento
+			cmp r8, r5, r2 		; Mira si el desplazamiento es igual a TO
+			bb1 eq, r8, CharEnc
+			br BucleBusc
+			
+CharEnc: 	add	r29, r5, 0 		; Cargo en r29 el valor de desplazamiento
+			POP (r31)
+			POP (r1)     
+			jmp (r1)
+			
+;---------COINCIDENCAD----------
+
+CoincidenCad: 	PUSH (r1)
+				PUSH (r31)
+				or r31, r30, r0 
+				ld  r10, r31, 8			 ; Cargo la primera palabra
+				ld	r20, r31, 12 		 ; Cargo la primera palabra
+				or  r4, r0, r0  			 ; Valor del desplazamiento
+				or  r29, r0, 0 			 ; Valor de retorno inicializado a 0 
+			
+BucleCoinc:		ld.bu r11, r10, r4       ; Cargo en r11 el primer char de la primera cadena
+				ld.bu r21, r20, r4       ; Cargo en r21 el primer char de la segunda cadena
+				cmp r8, r11, r21         ; Compara si son iguales ambos char
+				bb1 ne, r8, CharDif_Nulo ; Si se cumple que no son iguales salta a CharDif_Nulo 
+				cmp r8, r11, 0 	         ; Si son iguales, compara con el charnulo
+				bb1 eq, r8, CharDif_Nulo ; Si se cumple que son iguales salta a CharDif_Nulo 
+				addu r4, r4, 1           ; Si no, se incrementa el valor del desplazamiento
+				br BucleCoinc			 ; Se hace un salto al BucleCoinc para la siguiente iteracion
+			
+CharDif_Nulo: 	or	r29, r4, r0 		 ; Cargo en r29 el valor de desplazamiento 
+				POP (r31)		
+				POP (r1)         
+				jmp (r1)		
+				
+;---------BUSCAMAX----------
+
+BuscaMax:       PUSH (r1)
+                PUSH (r31)
+                or r31, r30, r0
+                ld r10, r31, 8         ; Cargo la REF en r10
+                ld r2, r31, 12         ; Cargo el Max en r2
+                ld r20, r31, 16     ; Cargo jj en r20
+                or r4, r0, r0         ; Desplazamiento por la cadena desde el inicio
+                or r5, r0, r0         ; Longitud de la cadena mas larga
+                subu r30, r30, 20    ; Reservo memoria para almacenar variables locales
+                subu r26, r0, 1        ; Pongo -1 en r26
+                st r26, r20, 0        ; Guardo en jj el -1 por si no encuentra nada
+        
+BucleMax:       cmp r8, r4, r2        ; Para ver si el desplazamiento esta en max 
+                bb1 eq, r8, FinMax  
+                st r10, r31, -4       	; Almaceno el puntero a la cadena
+                st r2, r31, -8        	; Almaceno el valor de Max
+                st r20, r31, -12     	; Almaceno el valor de salida
+                st r4, r31, -16     	; Almaceno desplazamiento por la cadena desde el inicio
+                st r5, r31, -20     	; Longitud de la cadena mas larga
+                PUSH(r2)            	; To
+                PUSH(r4)            	; From
+                PUSH(r10)            	; Ref
+                ld.bu r6, r10, r2        
+                PUSH(r6)            	; C
+                bsr BuscaCar         	; r29 guarda la posicion del caracter
+                addu r30, r30, 16    	; Restablezco el puntero de pila
+                ld r10, r31, -4        	; Restauro el puntero a la cadena
+                ld r2, r31, -8         	; Restauro el valor de 
+                ld r20, r31, -12     	; Restauro el valor de salidaMax
+                ld r4, r31, -16     	; Restauro el desplazamiento por la cadena desde el inicio
+                ld r5, r31, -20     	; Restauro el desplazamiento cadena mas larga
+                cmp r8, r29, r2     	; Compara la posicion del caracter obtenido con r2(MAX)
+                bb1 eq, r8, FinMax  	; Si es max va a esMax 
+                or r4, r29, 0       	; Desplazamos el puntero de la cadena a r29
+                st r10, r31, -4        	; Almaceno el puntero a la cadena
+                st r2, r31, -8        	; Almaceno el valor de Max
+                st r20, r31, -12     	; Almaceno el valor de salida
+                st r4, r31, -16     	; Almaceno desplazamiento por la cadena desde el inicio
+                st r5, r31, -20     	; Longitud de la cadena mas larga
+                addu r6, r10, r4    	; Cadena 1
+                PUSH(r6)            
+                addu r6, r10, r2    	; Cadena 2
+                PUSH(r6)
+                bsr CoincidenCad
+                addu r30, r30, 8
+                ld r10, r31, -4     	; Restauro el puntero a la cadena
+                ld r2, r31, -8       	; Restauro el valor de Max
+                ld r20, r31, -12     	; Restauro el valor de salida
+                ld r4, r31, -16     	; Restauro el desplazamiento por la cadena desde el inicio
+                ld r5, r31, -20     	; Restauro el desplazamiento cadena mas larga
+                cmp r8, r29, r5
+                bb1 gt, r8, esMayor
+                addu r4, r4, 1
+                br BucleMax
+            
+esMayor:        cmp r8, r29, 0xFF
+                bb1 ge, r8, Mayor255            
+                or r5, r29, 0           ; Guardo en r5 la longitud de la coincidencia
+                st r4, r20, 0           ; Guardo en jj el desplazamiento
+                addu r4, r4, 1    
+                br BucleMax
+                
+Mayor255:       or r5, r0, 0xFF         ; Guardo en r5 la longitud de la coincidencia
+                st r4, r20, 0           ; Guardo en jj el desplazamiento   
+                br FinMax
+                
+FinMax:         addu r30, r30, 20     	; Desapilo las variables auxiliares
+                or r29, r5, r0
+                POP(r31)    
+                POP(r1)
+                jmp(r1)
+
+;---------CHECKSUM----------
+
+Checksum:		PUSH (r1)
+                PUSH (r31)
+				or r31, r30, r0
+				ld r10, r31, 8		; Puntero a cadena
+				PUSH (r10)			; Apila el puntero 
+				bsr LongCad			; r29 guarda la longitud de la cadena
+				POP (r10)
+				or r5, r0, r0		; Desplazamiento
+				divu r2, r29, 4		; r2 cociente
+				mulu r3, r2, 4		; r3 cociente x divisor
+				subu r4, r29, r3	; r4 resto
+				or r7, r0, r0       ; Contador
+				or r20, r29, r0     ; Es la longitud de la cadena
+				or r29, r0, 0
+				cmp r8, r4, r0
+				bb1 ne, r8, noEsMultiplo
+				
+				
+esMultiplo:		ld r11, r10, r5
+				cmp r8, r5, r20
+				bb1 eq, r8, FinSum
+				addu r29, r29, r11
+				addu r5, r5, 4
+				br esMultiplo
+				
+noEsMultiplo:   divu r20, r20, 4       	; Dividimos la longitud entre
+				mulu r20, r20, 4       	; Multiplicamos la r20 por 2
+                addu r12, r10, r20      ; r12 contiene la ultima palabra
+				
+contador:		ld.bu r13, r12, r7		; Carga la primera letra de la ultima palabra
+		        cmp r8, r13, 0			; Mira si es el fin de cadena
+				bb1 eq, r8, finCad		; Si lo es, va a finCad
+				addu r7, r7, 1			; Si no, incrementa el desplazamiento
+				br contador				; Llama al contador con el siguiente caracter
+				
+finCad:         ld r19,r12,0
+                or r9, r0, 4			; Guarda en r9 el inmediato 4
+                subu r15, r9, r7        ; Calcula el numero de ceros que hay que poner
+				mulu r15, r15, 8
+				mak r16, r19, r15
+				extu r17, r16, r15		; Extrae 8 primeros bits (primer byte)
+
+sumaIn: 		ld r11, r10, r5			; Carga la primera palabra
+				cmp r8, r5, r20			; Mira si el desplazamiento ha llegado a la ultima palabra
+				bb1 eq, r8, sumaUlt		; Si ha llegado, va a sumaUlt
+				addu r29, r29, r11		; Si no, suma la palabra a r29
+				addu r5, r5, 4			; Incrementa el desplazamiento en 4 
+				br sumaIn			  	; Llama a sumaNo con la siguiente palabra		
+		
+sumaUlt: 		addu r29, r29, r17		; Suma la ultima palabra
+              
+				
+FinSum:			POP (r31)	
+				POP (r1)
+				jmp (r1)
+
+;---------COMPRIME----------
+
+Comprime:		PUSH (r1)
+                PUSH (r31)
+				or r31, r30, r0
+				ld r10, r31, 8		; Puntero a cadena
+				PUSH (r10)			; Apila el puntero 
+				bsr LongCad			; r29 guarda la longitud de la cadena
+				POP (r10)
+				ld r21, r31, 12     ; Zona de memoria a escribir		
+				or r5, r0, 0        ; Desplazamiento sobre la cadena 
+				or r4, r0, 0   		; Desplazamiento de la pila
+				or r7, r0, 0		; Contador de caracteres en el registro
+				or r15, r0, 0      	; Posicion de la subcadena
+				or r28, r0, r29     ; Longitud del texto
+				or r9, r0, 7        ; Contador a 7
+				or r6, r0, 5        ; Desplazamiento sobre el mapa de bits y zona de memoria
+				or r12, r0, 0
+				st.h r28, r21, 0    ; Introducimos la longitud de la cadena en la cabecera
+				or r23, r0, 1
+				st.b r23, r21, 2    ; Introducimos un uno en la cabecera
+				divu r27, r28, 4    ; Cociente
+				mulu r27, r27, 4    ; Multiplicamos por 4
+				sub r26, r28, r27   ; Resto
+				cmp r8, r26, r0     ; Miramos si el resto es cero
+				bb1 ne, r8, noEsMult
+				addu r27, r27, 36 	; LongCad + 36
+				sub r30, r30, r27	; Reservamos la longitud de la cadena y espacio para las variables
+				br MChars
+				
+noEsMult:		addu r27, r27, 40   ; Longcad + 40
+				sub r30, r30, r27	; Reservamos la longitud de la cadena con exceso a 4 y espacio para las variables
+				
+MChars:			subu r4, r4, r27
+				ld.d r18, r10, r5
+				st.d r18, r31, r4
+				or r5, r0, 8
+				addu r4, r4, 8
+
+BucleCmpr:	    ld.bu r17, r10, r5
+                cmp r8, r17, 0		 ; Terminador de cadena 
+				bb1 eq, r8, FinBucle
+				st r5, r31, -4    	 ; Almaceno el desplazamiento sobre la cadena
+				st r7, r31, -8    	 ; Almaceno el contador de bytes del registro
+				st r28, r31, -12  	 ; Almaceno la longitud de la cadena
+				st r4, r31, -16    	 ; Almaceno el desplazamiento de la pila
+				st r6, r31, -20    	 ; Almaceno el desplazamiento del mapa de bits
+				st r9, r31, -24
+				st r12, r31, -28
+				st r21, r31, -32   	 ; Comprimido
+				st r27, r31, -36   	 ; Pos primer caracter
+				PUSH (r15)           ; jj
+				PUSH (r5)            ; MAX
+				PUSH (r10)           ; Puntero a la cadena
+				bsr BuscaMax
+				addu r30, r30, 12    ; Restablecemos el puntero de pila
+				ld r5, r31, -4       ; Restauro el desplazamiento sobre la cadena
+				ld r7, r31, -8	     ; Restauro el contador de bytes del registro
+				ld r28, r31, -12     ; Restauro la longitud de la cadena
+				ld r4, r31, -16      ; Restauro el desplazamiento de la pila
+				ld r6, r31, -20      ; Restauro el desplazamiento del mapa de bits
+				ld r9, r31, -24
+				ld r12, r31, -28
+				ld r21, r31, -32     ; Comprimido
+				ld r27, r31, -36     ; Pos primer caracter
+				or r24, r0, 1
+				or r23, r0, 2	     ; Inicializamos a 2 el registro
+				cmp r8, r29, 4       ; Si es menor que 4
+				bb1 lt, r8, NoCopia
+				
+; Calcula la potencia de dos correspondiente al desplazamiento del 0 al 7		
+		
+BucleMult: 		cmp r8, r24, r9
+				bb1 eq, r8, continua ; Si es igual a r9 continua
+				addu r24, r24, 1
+				mulu r23, r23, 2     ; Multiplica por dos hasta que se alcance r9
+				br BucleMult
+				
+continua:		addu r12, r12, r23   ; Sumo el resultado de BucleMult
+				ld.bu r17, r15, 0    ; Cogemos el primer byte
+				st.b r17, r31, r4    ; Metemos el origen (primer byte)
+				addu r4, r4, 1       ; Sumamos uno al desplazamiento
+				ld.bu r17, r15, 1    ; Cogemos el segundo byte      
+				st.b r17, r31, r4    ; Metemos el caracter 0
+				addu r4, r4, 1
+				st.b r29, r31, r4    ; Metemos la longitud de la coincidencia
+				addu r4, r4, 1
+				addu r5, r5, r29     ; Desplazamos r5 la longitud de la coincidencia
+				cmp r8, r9, r0       ; Si r9 llega cero, es decir, ha leido un byte
+				bb1 eq, r8, anadeBit
+				subu r9, r9, 1       ; Restamos uno
+				br BucleCmpr
+
+anadeBit: 		st.b r12, r21, r6    ; Añadimos el byte al mapa de bits
+				addu r6, r6, 1	   	 ; Incrementamos el desplazamiento
+				or r12, r0, 0			
+				or r9, r0, 7		 ; Restauro el numero de bits
+				br BucleCmpr
+				
+NoCopia:		ld.bu r11, r10, r5 	  ; Caracter de la cadena con desplazamiento r22
+				st.b r11, r31, r4     ; Metemos el caracter en la pila
+				addu r4, r4, 1        ; Le sumamos 1
+				addu r5, r5, 1        ; Sumamos uno al desplazamiento de la cadena
+				cmp r8, r9, 0
+				bb1 eq, r8, anadeBit
+				subu r9, r9, 1        ; Restamos al contador del mapa de bits
+                br BucleCmpr	
+
+FinBucle:   	cmp r8, r9, r0       
+				bb1 ne, r8, anade	  	; Si no es cero añade el byte al mapa de bits
+				
+continua2:	    st r6, r31, -20
+				ld.bu r6, r31, -20
+				st.b r6, r21, 3		 	; Metemos el desplazamiento de la cabecera + mapa de bits
+				ld.bu r6, r31, -19
+				st.b r6, r21, 4
+				ld r6, r31, -20
+				or r9, r0, 0
+				subu r9, r9, r27		; Desplazamiento el puntero al primer caracter del texto comprimido
+				
+AnadeCarac:		cmp r8, r9, r4
+				bb1 eq, r8, FinCom		; Termina cuando llegue al ultimo caracter del texto comprimido
+				ld.bu r17, r31, r9		; Cargo el caracter del texto comprimido
+				st.b r17, r21, r6		; Lo añado en cmprdo
+				addu r6, r6, 1
+				addu r9, r9, 1
+				br AnadeCarac
+				
+anade:			st.b r12, r21, r6  		; Añade el byte al mapa de bits
+				addu r6, r6, 1      	; Incrementamos el desplazamiento
+ 				br continua2
+				
+FinCom:		    or r29, r6, r0
+				add r30, r30, r27	
+                POP (r31)	
+				POP (r1)
+				jmp (r1)           
+				
+;---------DESCOMPRIME----------
+
+Descomprime:	PUSH (r1)
+                PUSH (r31)
+				or r31, r30, r0
+				ld r10, r31, 8		; Puntero a cadena
+				ld r20, r31, 12     ; Zona de memoria a escribir		
+				or r4, r0, 0        ; Desplazamiento sobre el texto comprimido
+				or r5, r0, 0        ; Desplazamiento sobre la cadena descomprimida
+				or r6, r0, 5        ; Puntero del mapa de bits(bits))
+			    ld.bu r7, r10, 3	; Desplazamiento de la zona de los caracteres comprimidos
+				ld.bu r4, r10, 4
+				or r8, r0, 8
+				mak r4, r4, r8
+				add r22, r4, r7		; Desplazamiento mapa de bits + cabecera
+				or r4, r0, r22
+				or r7, r0, 0        ; Contador
+				or r13,r0,0         ; Contador para el bit 1
+				ld.bu r16, r10, 0   ; Longitud de la cadena sin comprimir
+				ld.bu r17, r10, 1
+				or r8, r0, 8
+				mak r17, r17, r8
+				add r16, r16, r17    ; Longitud de la cadena sin comprimir
+				
+PrimerosOcho:	cmp r8, r5, 8
+				bb1 eq, r8, ByteDelMapa
+				ld.bu r9, r10, r4	; Cojo el  caracter		
+				st.b r9, r20, r5	; Meto el caracter
+				addu r4, r4, 1		; Desplazamiento sobre el texto comprimido
+				addu r5, r5, 1		; Desplazamiento de la zona del texto descompreso
+				br PrimerosOcho
+				
+ByteDelMapa:	ld.bu r13, r10, r6  ; Un byte del mapa de bits
+				or r7, r0, 0x80
+				addu r6, r6, 1
+					
+BucleDes:		cmp r8, r5, r16          ; Miramos si es igual a la longitud del texto
+				bb1 eq, r8, FinDes
+				cmp r8, r7, 0x00
+				bb1 eq, r8, ByteDelMapa  ; Hemos agotado los 7 bits
+				and r21, r13, r7
+				divu r7, r7, 2
+				cmp r8, r21, 0
+				bb1 eq, r8, esCero
+				ld.bu r9, r10, r4        ; Origen de la coincidencia 1
+				addu r4, r4, 1
+				ld.bu r11, r10, r4	   	 ; Origen de la coincidencia 2
+				addu r4, r4, 1
+				ld.bu r12, r10, r4	  	 ; Tamaño de la coincidencia 
+				or r8, r0, 8
+				mak r11, r11, r8
+				add r9, r9, r11       	 ; Origen de la coincidencia
+				addu r4, r4, 1
+				or r15, r0, 0
+				
+Metecoin:		cmp r8, r15, r12		 ; Miramos que hayamos metido todos lo digitos
+				bb1 eq, r8, BucleDes
+				ld.bu r14, r20, r9	  	 ; Cogemos caracter
+				st.b r14, r20, r5		 ; Lo introducimos
+				addu r5, r5, 1
+				addu r9, r9, 1
+				addu r15, r15, 1
+				br Metecoin
+
+esCero:			ld.bu r9, r10, r4    ; Cojo el caracter
+				st.b r9, r20, r5     ; Meto el caracter
+				addu r4, r4, 1
+				addu r5, r5, 1
+				br BucleDes
+				
+FinDes: 		or r24, r0, 0x00
+				st.b r24, r20, r5
+				or r29, r0, r16
+				POP(r31)
+				POP(r1)
+				jmp(r1)
+
+;---------VERIFICA----------
+
+Verifica:		PUSH (r1)
+                PUSH (r31)
+				or r31, r30, r0
+				ld r10, r31, 8		; Puntero a cadena
+				PUSH (r10)			; Apila el puntero 
+				bsr LongCad			; r29 guarda la longitud de la cadena
+				POP (r10)
+				or r28, r0, r29 	; r28 guarda la longitud de la cadena
+				addu r27, r28, 7
+				divu r26, r27, 8	
+				subu r26, r26, 1	; r26 guarda el numero de bytes del mapa de bits 
+				add r15, r26, r28
+				addu r15, r15, 5	; r15 guarda el numero de bytes a reservar
+				divu r25, r15, 4    ; Cociente
+				mulu r25, r25, 4    ; Multiplicamos por 4
+				sub r26, r15, r25   ; Resto
+				cmp r8, r26, r0     ; Miramos si el resto es cero
+				bb1 ne, r8, NoMult4
+				
+PilaComp:		ld r20, r31, 12		; r20 checksum1 original 
+				ld r21, r31, 16		; r21 checksum2 compr
+				subu r30, r30, 28	; Reserva en pila
+				sub r30, r30, r25	
+				add r22, r30, r0	; r22 puntero a la zona de memoria del texto compr
+				divu r27, r28, 4    ; Cociente
+				mulu r27, r27, 4    ; Multiplicamos por 4
+				sub r26, r28, r27   ; Resto
+				cmp r8, r26, r0     ; Miramos si el resto es cero
+				bb1 ne, r8, NoMult41
+				
+PilaDesc:		sub r30, r30, r27
+				subu r30, r30, 4
+				add r23, r30, r0	; r23 puntero a la zona de memoria del texto descompr
+				add r25, r25, r27
+
+bsrCompr:		st r10, r31, -4		; Almaceno puntero a cadena
+				st r20, r31, -8		; Almaceno puntero a checksum1
+				st r21, r31, -12	; Almaceno puntero a checksum2
+				st r25, r31, -16	; Almaceno desplazamiento de la pila
+				st r22, r31, -20
+				st r23, r31, -24
+				st r28, r31, -28
+				PUSH(r22)
+				PUSH(r10)
+				bsr Comprime
+				POP(r22)
+				POP(r10)
+				ld r10, r31, -4		; Almaceno puntero a cadena
+				ld r20, r31, -8		; Almaceno puntero a CheckSum1
+				ld r21, r31, -12	; Almaceno puntero a CheckSum2
+				ld r25, r31, -16	; Almaceno desplazamiento de la pila
+				ld r22, r31, -20
+				ld r23, r31, -24
+				ld r28, r31, -28
+				st r10, r31, -4		; Almaceno puntero a cadena
+				st r20, r31, -8		; Almaceno puntero a CheckSum1
+				st r21, r31, -12	; Almaceno puntero a CheckSum2
+				st r25, r31, -16	; Almaceno desplazamiento de la pila
+				st r22, r31, -20
+				st r23, r31, -24
+				st r28, r31, -28
+				PUSH(r23)
+				PUSH(r22)
+				bsr Descomprime
+				POP(r23)
+				POP(r22)
+				ld r10, r31, -4		; Almaceno puntero a cadena
+				ld r20, r31, -8		; Almaceno puntero a CheckSum1
+				ld r21, r31, -12	; Almaceno puntero a CheckSum2
+				ld r25, r31, -16	; Almaceno desplazamiento de la pila
+				ld r22, r31, -20
+				ld r23, r31, -24
+				ld r28, r31, -28
+				cmp r8, r29, r28
+				bb1 ne, r8, NoIguales
+				st r10, r31, -4		; Almaceno puntero a cadena
+				st r20, r31, -8		; Almaceno puntero a CheckSum1
+				st r21, r31, -12	; Almaceno puntero a CheckSum2
+				st r25, r31, -16	; Almaceno desplazamiento de la pila
+				st r22, r31, -20
+				st r23, r31, -24
+				PUSH(r10)
+				bsr Checksum
+				POP(r10)
+				ld r10, r31, -4		; Almaceno puntero a cadena
+				ld r20, r31, -8		; Almaceno puntero a CheckSum1
+				ld r21, r31, -12	; Almaceno puntero a CheckSum2
+				ld r25, r31, -16	; Almaceno desplazamiento de la pila
+				ld r22, r31, -20
+				ld r23, r31, -24
+				st r29, r20, 0
+				st r10, r31, -4		; Almaceno puntero a cadena
+				st r20, r31, -8		; Almaceno puntero a CheckSum1
+				st r21, r31, -12	; Almaceno puntero a CheckSum2
+				st r25, r31, -16	; Almaceno desplazamiento de la pila
+				st r22, r31, -20
+				st r23, r31, -24
+				PUSH(r23)
+				bsr Checksum
+				POP(r23)
+				ld r10, r31, -4		; Almaceno puntero a cadena
+				ld r20, r31, -8		; Almaceno puntero a CheckSum1
+				ld r21, r31, -12	; Almaceno puntero a CheckSum2
+				ld r25, r31, -16	; Almaceno desplazamiento de la pila
+				ld r22, r31, -20
+				ld r23, r31, -24
+				st r29, r21, 0
+				ld r5, r20, 0
+				ld r6, r21, 0
+				cmp r8, r5, r6
+				bb1 ne, r8, NoIguales
+				or r29, r0,0
+				br FinVer
+				
+NoIguales:		or r29, r0,0
+				subu r29, r29, 1
+				br FinVer
+	
+NoMult41: 		addu r27, r27, 4
+				br PilaDesc
+				
+NoMult4:		addu r25, r25, 4
+				br PilaComp
+				
+FinVer: 		add r30, r30, r25
+				addu r30, r30, 32
+				POP(r31)
+				POP(r1)
+				jmp(r1)
